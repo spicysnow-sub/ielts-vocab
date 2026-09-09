@@ -219,6 +219,7 @@ body{
     border:1px solid var(--rule);background:var(--btn);color:var(--ink);cursor:pointer}
   .vxrow button.main{background:var(--ink);color:var(--paper);border-color:var(--ink)}
   .vxmsg{font-size:12px;line-height:1.6;color:var(--ink-mute)}
+  .vxfer a{color:var(--l)}
   .vxmsg.yes{color:var(--ok)}
   .vxmsg.no{color:var(--no)}
   .vxfer textarea{margin-top:12px;width:100%;box-sizing:border-box;min-height:94px;resize:vertical;
@@ -2460,7 +2461,10 @@ var VOCAB=[
   });
 
   el.vXLead.innerHTML = window.__vXferLead ||
-    "iPad の<b>オフライン版</b>で解いた分を、ここに取り込みます。オフライン版で〈書き出してコピー〉→ 下の枠に貼って〈取り込む〉。";
+    "iPad の<b>オフライン版</b>で解いた分を、ここに取り込みます。" +
+    "オフライン版で〈書き出してコピー〉→ 下の枠に貼って〈取り込む〉。<br>" +
+    "オフライン版 → <a href=\"https://spicysnow-sub.github.io/ielts-vocab/\" target=\"_blank\" rel=\"noopener\">" +
+    "spicysnow-sub.github.io/ielts-vocab</a>（iPad の Safari で開いて〈共有〉→〈ホーム画面に追加〉）";
 
   loadPref();
   render();
