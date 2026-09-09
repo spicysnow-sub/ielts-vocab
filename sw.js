@@ -1,7 +1,7 @@
 /* sw.js — 語彙オフライン版のキャッシュ番人
    中身は index.html 1枚（フォントも語彙データも中に入っている）なので、
-   ここで守るのは実質そのファイルだけ。2026-09-09-63e43638 はビルドが差し込む。 */
-var VER = "2026-09-09-63e43638";
+   ここで守るのは実質そのファイルだけ。2026-09-09-f0b43c66 はビルドが差し込む。 */
+var VER = "2026-09-09-f0b43c66";
 var CACHE = "ielts-vocab-" + VER;
 var ASSETS = ["./", "./index.html", "./manifest.webmanifest",
               "./icon-180.png", "./icon-192.png", "./icon-512.png"];
