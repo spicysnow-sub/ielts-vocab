@@ -1986,6 +1986,7 @@ var VOCAB=[
 
 
   var SKEY="ielts_vocab_state_v1";
+  var XKEY="ielts_vocab_xfer_v1";     /* 取り込み済みコードの控え＝同じコードを二度効かせない */
   var POS={n:"名詞",v:"動詞",adj:"形容詞",adv:"副詞",prep:"前置詞",conj:"接続詞"};
 
   /* 語ごとの状態：[出題回数, 連続正解, 誤答回数]。
@@ -2001,6 +2002,23 @@ var VOCAB=[
     return base;
   }
   window.__vMergeState=mergeState;
+
+  /* 〈取り込む〉だけが使う合流。出題回数は多い方を残すが、
+     **誤答は max・連続正解は min** を取る＝どちらの端末で間違えた語も必ずつまずきに戻る。
+     （素の mergeState は3つ組ごと差し替えるので、両方で解いた語は負けた側の誤答が消えていた）
+
+     ⛔ 起動時の合流には使わないこと。埋め込みの vstate は〈同期〉するまで動かない写しなので、
+        毎回 min をかけると「直したはずの語」が読み込みのたびにつまずきへ引き戻される。 */
+  function mergeImported(base, add){
+    for(var k in add){
+      var a=base[k], b=add[k];
+      if(!b) continue;
+      if(!a){ base[k]=[(b[0]|0),(b[1]|0),(b[2]|0)]; continue }
+      var win=((b[0]||0)>=(a[0]||0))?b:a;
+      base[k]=[(win[0]|0), Math.min(a[1]|0,b[1]|0), Math.max(a[2]|0,b[2]|0)];
+    }
+    return base;
+  }
 
   var ST=(function(){
     var st={};
@@ -2399,17 +2417,17 @@ var VOCAB=[
   }
 
   function parseCode(txt){
-    var st={}, xs=[], sig=false;
+    var st={}, xs=[], sig=false, at="";
     String(txt||"").split(/\r?\n/).forEach(function(line){
       var p=line.trim().split(/\s+/);
-      if(p[0]===XSIG){ sig=true; return }
+      if(p[0]===XSIG){ sig=true; if(p[2]) at=p[2]; return }
       if(p[0]==="S"&&p.length>=5&&p[1]){ st[p[1]]=[(+p[2]||0),(+p[3]||0),(+p[4]||0)]; return }
       if(p[0]==="X"&&p.length>=6){
         xs.push({at:p[1],mode:p[2],scope:p[3],n:(+p[4]||0),ok:(+p[5]||0)});
       }
     });
     if(!sig) return null;
-    return {st:st, xs:xs};
+    return {st:st, xs:xs, at:at};
   }
 
   function xmsg(t,cls){ el.vXMsg.textContent=t; el.vXMsg.className="vxmsg"+(cls?" "+cls:"") }
@@ -2435,12 +2453,28 @@ var VOCAB=[
   el.vXIn.addEventListener("click",function(){
     var got=parseCode(el.vXBox.value);
     if(!got){ xmsg("コードとして読めませんでした（1行目が "+XSIG+" で始まっている必要があります）","no"); return }
-    var before=0, k;
+
+    /* 同じコードは一度だけ効かせる。誤答 max・連続正解 min は「新しい知らせ」に一度掛けるもので、
+       使い回したコードで直したはずの語を何度もつまずきへ戻さないための歯止め。 */
+    var seen=[];
+    try{ seen=JSON.parse(localStorage.getItem(XKEY)||"[]")||[] }catch(e){}
+    if(got.at && seen.indexOf(got.at)>=0){
+      xmsg("このコードは取り込み済みです（書き出し "+got.at.replace("T"," ").slice(0,16)+"）。"+
+           "もう一方で新しく〈書き出してコピー〉したコードを貼ってください","no");
+      return;
+    }
+
+    var weakOf=function(){ var n=0,q; for(q in ST){ var t=ST[q]||[0,0,0]; if(t[2]>0&&t[1]<2) n+=1 } return n };
+    var before=0, k, wBefore=weakOf();
     for(k in ST) before+=(ST[k]||[0])[0];
-    mergeState(ST, got.st);
+    mergeImported(ST, got.st);
     save();
-    var after=0;
+    var after=0, wAfter=weakOf();
     for(k in ST) after+=(ST[k]||[0])[0];
+    if(got.at){
+      seen.push(got.at); if(seen.length>50) seen=seen.slice(-50);
+      try{ localStorage.setItem(XKEY, JSON.stringify(seen)) }catch(e){}
+    }
 
     /* セッションは時刻で重複を弾く ── 同じコードを二度取り込んでも増えない */
     var have={}, added=0;
@@ -2456,6 +2490,7 @@ var VOCAB=[
     paint();
     xmsg("取り込みました。語 "+Object.keys(got.st).length.toLocaleString()+
          "／のべ出題 +"+(after-before).toLocaleString()+" 問"+
+         (wAfter>wBefore?("／つまずきに戻した "+(wAfter-wBefore).toLocaleString()+" 語"):"")+
          (added?("／セッション +"+added):"／セッションは新しい分なし")+
          (window.__syncNow?"　── 〈同期〉を押すと全端末に行き渡ります":""),"yes");
   });
