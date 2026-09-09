@@ -1,0 +1,18 @@
+{
+  "name": "IELTS 語彙",
+  "short_name": "語彙",
+  "description": "AWL 570語族 ＋ GSL 上位1000。オフラインで回せる語彙ドリル。",
+  "lang": "ja",
+  "dir": "ltr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F4F3EF",
+  "theme_color": "#F4F3EF",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
